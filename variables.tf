@@ -30,7 +30,7 @@ variable "instance_name" {
   default     = "my-webserver"
 }
 
-variable "labels" {
-  description = "List of labels to attach to the VM instance."
-  type        = map(any)
-}
+#variable "labels" {
+#  description = "List of labels to attach to the VM instance."
+#  type        = map(any)
+#}

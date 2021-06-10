@@ -4,7 +4,7 @@ data "google_compute_image" "ubuntu" {
 }
 
 data "template_file" "nginx" {
-  template = "${file("${path.module}/template/install_nginx.tpl")}"
+  template = file("${path.module}/templates/install_nginx.tpl")
 
   vars = {
     ufw_allow_nginx = "Nginx Full" # see https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-18-04
@@ -12,7 +12,9 @@ data "template_file" "nginx" {
 }
 
 resource "google_compute_instance" "vm_instance" {
-  name         = var.instance
+  project      = var.project
+  zone         = var.zone
+  name         = var.instance_name
   machine_type = var.machine_type
   tags         = ["allow-iap-ssh", "http-server"]
 
@@ -34,11 +36,12 @@ resource "google_compute_instance" "vm_instance" {
 
 resource "google_service_account" "vm_instance_sa" {
   project      = var.project
-  account_id   = var.instance
+  account_id   = var.instance_name
   display_name = "Service Account for VM"
 }
 
 resource "google_compute_network" "vpc_network" {
+  project                 = var.project
   name                    = var.network
   auto_create_subnetworks = "true"
 }
@@ -46,10 +49,10 @@ resource "google_compute_network" "vpc_network" {
 module "iap_tunneling" {
   source = "terraform-google-modules/bastion-host/google//modules/iap-tunneling"
 
-  project          = var.project
-  network          = google_compute_network.vpc_network.self_link
+  project = var.project
+  network = google_compute_network.vpc_network.self_link
   # service_accounts = [google_service_account.vm_instance_sa.email]
-  network_tags     = ["allow-iap-ssh", "http-server", "https-server"]
+  network_tags = ["allow-iap-ssh", "http-server", "https-server"]
 
   instances = [{
     name = google_compute_instance.vm_instance.name
