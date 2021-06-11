@@ -27,9 +27,17 @@ resource "google_compute_instance" "vm_instance" {
   network_interface {
     # A default network is created for all GCP projects
     network = google_compute_network.vpc_network.self_link
-    access_config {
-    }
+    # access_config {
+    # }
   }
+
+  shielded_instance_config {
+    enable_secure_boot = true
+    enable_vtpm = true
+    enable_integrity_monitoring = true
+  }
+
+  allow_stopping_for_update = true
 
   metadata_startup_script = data.template_file.nginx.rendered # https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file#rendered
 }
@@ -59,8 +67,5 @@ module "iap_tunneling" {
     zone = var.zone
   }]
 
-  members = [
-    "user:jjgoi@google.com",
-    "user:jiajian@bankon.cloud",
-  ]
+  members = []
 }
