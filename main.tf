@@ -16,7 +16,7 @@ resource "google_compute_instance" "vm_instance" {
   zone         = var.zone
   name         = var.instance_name
   machine_type = var.machine_type
-  tags         = ["allow-iap-ssh", "http-server"]
+  tags         = ["allow-iap-ssh", "http-server", "https-server"]
 
   boot_disk {
     initialize_params {
@@ -27,13 +27,13 @@ resource "google_compute_instance" "vm_instance" {
   network_interface {
     # A default network is created for all GCP projects
     network = google_compute_network.vpc_network.self_link
-    # access_config {
-    # }
+    access_config {
+    }
   }
 
   shielded_instance_config {
-    enable_secure_boot = true
-    enable_vtpm = true
+    enable_secure_boot          = true
+    enable_vtpm                 = true
     enable_integrity_monitoring = true
   }
 
@@ -54,13 +54,53 @@ resource "google_compute_network" "vpc_network" {
   auto_create_subnetworks = "true"
 }
 
+resource "google_compute_firewall" "allow_icmp" {
+  name    = "${google_compute_network.vpc_network.name}-allow-icmp"
+  network = google_compute_network.vpc_network.self_link
+  project = var.project
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+}
+
+resource "google_compute_firewall" "allow_http" {
+  name    = "${google_compute_network.vpc_network.name}-allow-http"
+  network = google_compute_network.vpc_network.self_link
+  project = var.project
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["http-server"]
+}
+
+resource "google_compute_firewall" "allow_https" {
+  name    = "${google_compute_network.vpc_network.name}-allow-https"
+  network = google_compute_network.vpc_network.self_link
+  project = var.project
+
+  allow {
+    protocol = "tcp"
+    ports    = ["443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["https-server"]
+}
+
 module "iap_tunneling" {
   source = "terraform-google-modules/bastion-host/google//modules/iap-tunneling"
 
   project = var.project
   network = google_compute_network.vpc_network.self_link
   # service_accounts = [google_service_account.vm_instance_sa.email]
-  network_tags = ["allow-iap-ssh", "http-server", "https-server"]
+  network_tags = ["allow-iap-ssh"]
 
   instances = [{
     name = google_compute_instance.vm_instance.name
