@@ -42,7 +42,7 @@ resource "google_compute_subnetwork" "vpc_subnet_01" {
     ip_cidr_range = "192.168.0.0/20"
   }
   secondary_ip_range {
-    range_name    = "asia-southeast1-02-gke-services"
+    range_name    = "asia-southeast1-01-gke-services"
     ip_cidr_range = "192.168.16.0/20"
   }
 }
@@ -66,7 +66,7 @@ resource "google_service_account" "project_sa" {
 module "gke" {
   source                     = "terraform-google-modules/kubernetes-engine/google"
   project_id                 = data.google_project.env_project.project_id
-  name                       = "gke-boa-1"
+  name                       = "bank-of-anthos-deployment"
   region                     = var.instance_region
   zones                      = ["${var.instance_region}-a"]
   network                    = google_compute_network.vpc_network.name
@@ -84,7 +84,7 @@ module "gke" {
       machine_type       = "e2-small"
       node_locations     = "${var.instance_region}-a,${var.instance_region}-b"
       min_count          = 1
-      max_count          = 8
+      max_count          = 4
       local_ssd_count    = 0
       disk_size_gb       = 10
       disk_type          = "pd-balanced"
