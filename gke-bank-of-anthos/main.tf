@@ -84,7 +84,7 @@ module "gke" {
       machine_type       = "e2-small"
       node_locations     = "${var.instance_region}-a,${var.instance_region}-b"
       min_count          = 1
-      max_count          = 4
+      max_count          = 8
       local_ssd_count    = 0
       disk_size_gb       = 10
       disk_type          = "pd-balanced"
@@ -93,7 +93,7 @@ module "gke" {
       auto_upgrade       = true
       service_account    = google_service_account.project_sa.email
       preemptible        = false
-      initial_node_count = 2
+      initial_node_count = 1
     },
   ]
 
